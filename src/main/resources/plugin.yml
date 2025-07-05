@@ -1,0 +1,5 @@
+name: yabackup
+version: '1.0-SNAPSHOT'
+main: io.github.kilesduli.yabackup.Yabackup
+prefix: yabackup
+api-version: 1.13
