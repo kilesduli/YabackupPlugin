@@ -1,10 +1,14 @@
 package io.github.kilesduli.yabackup
 
+import org.bukkit.World
 import org.bukkit.command.CommandSender
 import org.bukkit.command.defaults.BukkitCommand
+import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
-import org.bukkit.Bukkit.*
-import org.bukkit.World
+import java.nio.file.Path
+import java.nio.file.Paths
+import kotlin.io.path.createDirectory
+import kotlin.io.path.notExists
 
 class Yabackup : JavaPlugin() {
     override fun onEnable() {
@@ -24,9 +28,19 @@ class Yabackup : JavaPlugin() {
             commandLabel: String,
             args: Array<out String>?
         ): Boolean {
-            withNoAutoSaveThenSaveAllAsync {
-                logger.info("TODO: Creating backup archive...")
+            val type = if (args!!.isNotEmpty()) {
+                CompressType.valueOf(args[0].uppercase())
+            } else {
+                CompressType.ZSTD
             }
+
+            val name = if (sender is Player) {
+                sender.name
+            } else {
+                "console"
+            }
+
+            backupWorlds(type,name)
             return true
         }
 
@@ -36,7 +50,7 @@ class Yabackup : JavaPlugin() {
             fun filterStartWith(size: Int): (String) -> Boolean = { it.startsWith(args[size-1].lowercase()) }
 
             return when (val size = args.size) {
-                1 -> listOf("zstd", "gz", "zip").filter (filterStartWith(size))
+                1 -> CompressType.toList().filter (filterStartWith(size))
                 else -> emptyList()
             }
         }
@@ -65,6 +79,28 @@ class Yabackup : JavaPlugin() {
         })
     }
 
+    fun backupWorlds(type: CompressType, extraFileInfo: String) = withNoAutoSaveThenSaveAllAsync {
+        runCatching {
+            logger.info("Creating backup archive...")
+            val paths = sortedWorlds.map { it.worldFolder.toPath() }
+            val filename = "${formatCurrentTime()}-${extraFileInfo}${type.suffix()}"
+
+            archiveThenCompress(backupDir.resolve(filename), paths, type)
+            logger.info("Created backup archive: $filename")
+        }.onFailure { e ->
+            logger.severe("Failed to create backup: ${e.message}")
+        }
+    }
+
+
     val sortedWorlds: List<World>
         get() = server.worlds.sortedBy { it.name }
+    val backupDir: Path
+        get() {
+            val path = Paths.get("./backups")
+            if (path.notExists()) {
+                path.createDirectory()
+            }
+            return path
+        }
 }
