@@ -31,6 +31,12 @@ tasks {
         // Your plugin's jar (or shadowJar if present) will be used automatically.
         minecraftVersion("1.16.5")
     }
+
+    shadowJar {
+        minimize() // Minimize the jar to reduce size
+        relocate("org.apache.commons.compress", "io.github.kilesduli.shadowed.compress")
+        relocate("org.apache.commons.lang3", "io.github.kilesduli.shadowed.lang3")
+    }
 }
 
 val targetJavaVersion = 8
