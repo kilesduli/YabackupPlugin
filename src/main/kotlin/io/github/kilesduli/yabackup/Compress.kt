@@ -1,0 +1,107 @@
+package io.github.kilesduli.yabackup
+
+import org.apache.commons.compress.archivers.ArchiveEntry
+import org.apache.commons.compress.archivers.ArchiveOutputStream
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry
+import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
+import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream
+import org.apache.commons.compress.compressors.CompressorOutputStream
+import org.apache.commons.compress.compressors.zstandard.ZstdCompressorOutputStream
+import org.apache.commons.io.IOUtils
+import java.io.FileInputStream
+import java.io.FileOutputStream
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import kotlin.io.path.deleteIfExists
+import kotlin.io.path.isRegularFile
+import kotlin.io.path.relativeTo
+import org.bukkit.Bukkit.*
+import java.io.BufferedOutputStream
+import kotlin.io.path.notExists
+
+enum class CompressType {
+    ZSTD,
+    ZIP;
+
+    companion object {
+        fun toList(): List<String> {
+            return CompressType.entries.map { it.toString() }
+        }
+    }
+
+    fun suffix(): String {
+        return when (this) {
+            ZSTD -> ".tar.zst"
+            ZIP -> ".zip"
+        }
+    }
+
+    fun newArchiveEntry(path: Path, name: String): ArchiveEntry {
+        return when (this) {
+            ZSTD -> TarArchiveEntry(path, name)
+            ZIP -> ZipArchiveEntry(path, name)
+        }
+    }
+
+    fun createArchiveOutputStream(os: FileOutputStream): ArchiveOutputStream<out ArchiveEntry> {
+        return when (this) {
+            ZSTD -> TarArchiveOutputStream(os).apply {
+                setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX)
+            }
+            ZIP -> ZipArchiveOutputStream(os).apply {
+                setMethod(ZipArchiveOutputStream.DEFLATED)
+            }
+        }
+    }
+
+    fun createCompressorInputStream(os: BufferedOutputStream): CompressorOutputStream<*> {
+        return when (this) {
+            ZSTD -> ZstdCompressorOutputStream(os, 10)
+            ZIP -> throw Exception("This type does not require secondary compression: $this")
+        }
+    }
+}
+
+fun archiveThenCompress(dest: Path, paths: List<Path>, type: CompressType){
+    val middleFile = Paths.get("/tmp/yabackup.tar")
+    val destFile = when (type) {
+        CompressType.ZSTD -> FileOutputStream(middleFile.toFile())
+        CompressType.ZIP -> FileOutputStream(dest.toFile())
+    }
+
+    type.createArchiveOutputStream(destFile)
+        .use { out ->
+            paths.forEach { path ->
+                Files.walk(path).forEach {
+                    (out as ArchiveOutputStream<ArchiveEntry>).putArchiveEntry(type.newArchiveEntry(it, it.relativeTo(path.parent).toString()))
+                    if (it.isRegularFile()) {
+                        FileInputStream(it.toFile()).use { input ->
+                            IOUtils.copy(input, out)
+                        }
+                    }
+                    out.closeArchiveEntry()
+                }
+            }
+            out.finish()
+        }
+
+    compress(dest, middleFile, type)
+    middleFile.deleteIfExists()
+}
+
+private fun compress(dest: Path, middleFile: Path, type: CompressType) {
+    runCatching {
+        if (middleFile.notExists()) return
+        val inputstream = FileInputStream(middleFile.toFile())
+        val outputstream = FileOutputStream(dest.toFile()).buffered()
+        type.createCompressorInputStream(outputstream).use {
+            IOUtils.copy(inputstream, it)
+            it.close()
+            inputstream.close()
+        }
+    }.onFailure { e ->
+        getServer().logger.severe(e.message)
+    }
+}
