@@ -7,6 +7,8 @@ import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import kotlin.io.path.createDirectory
 import kotlin.io.path.notExists
 
@@ -103,4 +105,9 @@ class Yabackup : JavaPlugin() {
             }
             return path
         }
+}
+
+fun formatCurrentTime(): String {
+    val formater = "yyyyMMdd'T'HHmmss"
+    return LocalDateTime.now().format(DateTimeFormatter.ofPattern(formater))
 }
