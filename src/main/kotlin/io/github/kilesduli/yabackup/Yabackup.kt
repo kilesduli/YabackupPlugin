@@ -17,6 +17,10 @@ class Yabackup : JavaPlugin() {
         // register the command
         server.commandMap.register(name, backupCommand)
         NMSReflection.disableCheckAutoSave()
+        server.scheduler.runTaskTimer(this, Runnable {
+            logger.info("Running backup task...")
+            this.backupWorlds(CompressType.ZSTD, "autobackup")
+        }, 1 * 60 * 20, 20 * 60 * 20) // run every second
     }
 
     var backupCommand = object: BukkitCommand(
