@@ -14,9 +14,9 @@ import kotlin.io.path.notExists
 
 class Yabackup : JavaPlugin() {
     override fun onEnable() {
-        setupConfig()
         server.commandMap.register(name, backupCommand)
-        NMSReflection.disableCheckAutoSave()
+
+        setupConfig()
 
         if (intervalBackupTaskEnabled) {
             logger.info("Interval backup task is enabled.")
@@ -28,6 +28,9 @@ class Yabackup : JavaPlugin() {
                 this.backupWorlds(defaultCompressType, "autobackup")
             }, intervalBackupTaskInitialDelay, intervalBackupTaskInterval) // run every second
         }
+
+        // Suppresses warnings triggered by plugin-initiated world saves via CraftServer.
+        NMSReflection.disableCheckAutoSave()
 
     }
 
