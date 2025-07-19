@@ -89,7 +89,7 @@ class Yabackup : JavaPlugin() {
         runCatching {
             logger.info("Creating backup archive...")
             val paths = sortedWorlds.map { it.worldFolder.toPath() }
-            val filename = "${formatCurrentTime()}-${extraFileInfo}${type.suffix()}"
+            val filename = "${formatCurrentTime()}--${extraFileInfo}${type.suffix()}"
 
             archiveThenCompress(backupDir.resolve(filename), paths, type)
             logger.info("Created backup archive: $filename")

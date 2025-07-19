@@ -44,9 +44,11 @@ object NMSReflection {
                 // saveWorld :: save(@Nullable ProgressListener progress, boolean flush, boolean skipSave, boolean close)
                 4 -> saveWorldProxy.invoke(serverLevel, null, true, false, false)
 
+                // This only works in 1.14+
                 // saveWorld :: save(@Nullable ProgressListener progress, boolean flush, boolean skipSave)
                 3 -> saveWorldProxy.invoke(serverLevel, null, true, false)
 
+                // TODO: This not work
                 // saveWorld :: save(boolean flush, @Nullable IProgressUpdate iprogressupdate)
                 2 -> saveWorldProxy.invoke(serverLevel, true, null)
 
