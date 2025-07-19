@@ -15,7 +15,7 @@ object NMSReflection {
             throw RuntimeException("Failed to load class or method", e)
         }
     }
-    
+
     private val craftServerProxy: Class<*> by lazyLoadAndCatch {
         Class.forName("$craftBukkit.CraftServer")
     }
@@ -37,6 +37,10 @@ object NMSReflection {
             .firstOrNull { it.name == "save" }!!
     }
 
+    private val flushSaveProxy: Method by lazyLoadAndCatch {
+        craftWorldGetHandleProxy.invoke(Bukkit.getWorlds().first()).javaClass.getMethod("flushSave")
+    }
+
     fun saveWorld(world: World) {
         runCatching {
             val serverLevel = craftWorldGetHandleProxy.invoke(world)
@@ -48,9 +52,17 @@ object NMSReflection {
                 // saveWorld :: save(@Nullable ProgressListener progress, boolean flush, boolean skipSave)
                 3 -> saveWorldProxy.invoke(serverLevel, null, true, false)
 
-                // TODO: This not work
-                // saveWorld :: save(boolean flush, @Nullable IProgressUpdate iprogressupdate)
-                2 -> saveWorldProxy.invoke(serverLevel, true, null)
+                // According to the Minecraft 1.12 source code,
+                // calling '/save-all flush' will first invoke `saveWorld`, then `flushSave`.
+                // This behavior only works correctly in versions 1.10 through 1.12.
+                // In versions prior to 1.10, it may cause the server to endlessly save chunks until it hangs,
+                // though this issue does not occur on the official (vanilla) server.
+                2 -> {
+                    // saveWorld :: save(boolean flush, @Nullable IProgressUpdate iprogressupdate)
+                    saveWorldProxy.invoke(serverLevel, true, null)
+                    // flushSave :: save()
+                    flushSaveProxy.invoke(serverLevel)
+                }
 
                 else -> throw Exception("Unexpected number of parameters in saveWorld method: " + saveWorldProxy.parameterCount)
             }
