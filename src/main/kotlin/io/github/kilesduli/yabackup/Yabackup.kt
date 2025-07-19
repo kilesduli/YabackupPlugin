@@ -115,11 +115,11 @@ class Yabackup : JavaPlugin() {
     fun setupConfig() {
         config.options().copyDefaults(true)
         config.options().header("Yabackup Configuration\n")
-        config.addDefault("backups_dir", "./backups")
-        config.addDefault("compress.type", "zstd")
-        config.addDefault("interval_backup_task.enable", true)
-        config.addDefault("interval_backup_task.initial_delay_minutes", 1)
-        config.addDefault("interval_backup_task.interval_minutes", 20)
+        config.addDefault(Options.BACKUPS_DIR, "./backups")
+        config.addDefault(Options.COMPRESS_TYPE, "zstd")
+        config.addDefault(Options.INTERVAL_BACKUP_TASK_ENABLE, true)
+        config.addDefault(Options.INTERVAL_BACKUP_TASK_INITIAL_DELAY_MINUTES, 1)
+        config.addDefault(Options.INTERVAL_BACKUP_TASK_INTERVAL_MINUTES, 20)
         saveConfig()
     }
 
@@ -128,21 +128,29 @@ class Yabackup : JavaPlugin() {
         get() = server.worlds.sortedBy { it.name }
     val backupsDir: Path
         get() {
-            val path = Paths.get(config.getString("backups_dir")!!)
+            val path = Paths.get(config.getString(Options.BACKUPS_DIR)!!)
             if (path.notExists()) {
                 path.createDirectory()
             }
             return path
         }
     val defaultCompressType: CompressType
-        get() = CompressType.valueOf(config.getString("compress.type")?.uppercase()!!)
+        get() = CompressType.valueOf(config.getString(Options.COMPRESS_TYPE)?.uppercase()!!)
 
     val intervalBackupTaskEnabled: Boolean
-        get() = config.getBoolean("interval_backup_task.enable")
+        get() = config.getBoolean(Options.INTERVAL_BACKUP_TASK_ENABLE)
     val intervalBackupTaskInitialDelay: Long
-        get() = config.getLong("interval_backup_task.initial_delay_minutes") * 60 * 20 // in ticks
+        get() = config.getLong(Options.INTERVAL_BACKUP_TASK_INITIAL_DELAY_MINUTES) * 60 * 20 // in ticks
     val intervalBackupTaskInterval: Long
-        get() = config.getLong("interval_backup_task.interval_minutes") * 60 * 20 // in ticks
+        get() = config.getLong(Options.INTERVAL_BACKUP_TASK_INTERVAL_MINUTES) * 60 * 20 // in ticks
+}
+
+object Options {
+    const val BACKUPS_DIR = "backups_dir"
+    const val COMPRESS_TYPE = "compress.type"
+    const val INTERVAL_BACKUP_TASK_ENABLE = "interval_backup_task.enable"
+    const val INTERVAL_BACKUP_TASK_INITIAL_DELAY_MINUTES = "interval_backup_task.initial_delay_minutes"
+    const val INTERVAL_BACKUP_TASK_INTERVAL_MINUTES = "interval_backup_task.interval_minutes"
 }
 
 fun formatCurrentTime(): String {
