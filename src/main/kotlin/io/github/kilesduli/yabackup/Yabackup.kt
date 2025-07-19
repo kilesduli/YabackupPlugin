@@ -94,7 +94,7 @@ class Yabackup : JavaPlugin() {
             val paths = sortedWorlds.map { it.worldFolder.toPath() }
             val filename = "${formatCurrentTime()}--${extraFileInfo}${type.suffix()}"
 
-            archiveThenCompress(backupDir.resolve(filename), paths, type)
+            archiveThenCompress(backupsDir.resolve(filename), paths, type)
             logger.info("Created backup archive: $filename")
         }.onFailure { e ->
             logger.severe("Failed to create backup: ${e.message}")
@@ -112,7 +112,7 @@ class Yabackup : JavaPlugin() {
 
     val sortedWorlds: List<World>
         get() = server.worlds.sortedBy { it.name }
-    val backupDir: Path
+    val backupsDir: Path
         get() {
             val path = Paths.get(config.getString("backups_dir")!!)
             if (path.notExists()) {
