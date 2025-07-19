@@ -115,7 +115,7 @@ class Yabackup : JavaPlugin() {
     fun setupConfig() {
         config.options().copyDefaults(true)
         config.options().header("Yabackup Configuration\n")
-        config.addDefault(Options.BACKUPS_DIR, "./backups")
+        config.addDefault(Options.BACKUP_BACKUPS_DIR, "./backups")
         config.addDefault(Options.COMPRESS_TYPE, "zstd")
         config.addDefault(Options.INTERVAL_BACKUP_TASK_ENABLE, true)
         config.addDefault(Options.INTERVAL_BACKUP_TASK_INITIAL_DELAY_MINUTES, 1)
@@ -128,7 +128,7 @@ class Yabackup : JavaPlugin() {
         get() = server.worlds.sortedBy { it.name }
     val backupsDir: Path
         get() {
-            val path = Paths.get(config.getString(Options.BACKUPS_DIR)!!)
+            val path = Paths.get(config.getString(Options.BACKUP_BACKUPS_DIR)!!)
             if (path.notExists()) {
                 path.createDirectory()
             }
@@ -146,7 +146,7 @@ class Yabackup : JavaPlugin() {
 }
 
 object Options {
-    const val BACKUPS_DIR = "backups_dir"
+    const val BACKUP_BACKUPS_DIR = "backup.backups_dir"
     const val COMPRESS_TYPE = "compress.type"
     const val INTERVAL_BACKUP_TASK_ENABLE = "interval_backup_task.enable"
     const val INTERVAL_BACKUP_TASK_INITIAL_DELAY_MINUTES = "interval_backup_task.initial_delay_minutes"
