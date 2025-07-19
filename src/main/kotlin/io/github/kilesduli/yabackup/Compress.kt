@@ -75,7 +75,8 @@ fun archiveThenCompress(dest: Path, paths: List<Path>, type: CompressType){
         .use { out ->
             paths.forEach { path ->
                 Files.walk(path).forEach {
-                    (out as ArchiveOutputStream<ArchiveEntry>).putArchiveEntry(type.newArchiveEntry(it, it.relativeTo(path.parent).toString()))
+                    (out as ArchiveOutputStream<ArchiveEntry>)
+                        .putArchiveEntry(type.newArchiveEntry(it, it.relativeTo(path.parent).toString()))
                     if (it.isRegularFile()) {
                         FileInputStream(it.toFile()).use { input ->
                             IOUtils.copy(input, out)
