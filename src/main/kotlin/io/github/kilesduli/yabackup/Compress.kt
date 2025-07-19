@@ -27,7 +27,7 @@ enum class CompressType {
 
     companion object {
         fun toList(): List<String> {
-            return CompressType.entries.map { it.toString() }
+            return CompressType.entries.map { it.name.lowercase() }
         }
     }
 
