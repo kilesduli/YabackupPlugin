@@ -71,7 +71,10 @@ class Yabackup : JavaPlugin() {
         logger.info("Saved all players")
 
         worlds.forEach { world ->
-            world.isAutoSave = false
+            // Before Minecraft 1.14, '/save-all' temporarily enabled auto-save,
+            // then restored the previous state after saving.
+            // In later versions, the command appears to have no effect.
+            world.isAutoSave = true
             NMSReflection.saveWorld(world)
             logger.info("Saved world: ${world.name}")
         }
