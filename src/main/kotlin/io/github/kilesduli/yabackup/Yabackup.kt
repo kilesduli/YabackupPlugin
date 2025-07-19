@@ -19,7 +19,7 @@ class Yabackup : JavaPlugin() {
         NMSReflection.disableCheckAutoSave()
         server.scheduler.runTaskTimer(this, Runnable {
             logger.info("Running backup task...")
-            this.backupWorlds(CompressType.ZSTD, "autobackup")
+            this.backupWorlds(defaultCompressType, "autobackup")
         }, 1 * 60 * 20, 20 * 60 * 20) // run every second
     }
 
@@ -37,7 +37,7 @@ class Yabackup : JavaPlugin() {
             val type = if (args!!.isNotEmpty()) {
                 CompressType.valueOf(args[0].uppercase())
             } else {
-                CompressType.ZSTD
+                defaultCompressType
             }
 
             val name = if (sender is Player) {
@@ -105,6 +105,7 @@ class Yabackup : JavaPlugin() {
         config.options().copyDefaults(true)
         config.options().header("Yabackup Configuration\n")
         config.addDefault("backups_dir", "./backups")
+        config.addDefault("compress.type", "zstd")
         saveConfig()
     }
 
@@ -119,6 +120,8 @@ class Yabackup : JavaPlugin() {
             }
             return path
         }
+    val defaultCompressType: CompressType
+        get() = CompressType.valueOf(config.getString("compress.type")?.uppercase()!!)
 }
 
 fun formatCurrentTime(): String {
