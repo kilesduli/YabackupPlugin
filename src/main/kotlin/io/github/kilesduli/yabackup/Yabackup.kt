@@ -17,10 +17,18 @@ class Yabackup : JavaPlugin() {
         setupConfig()
         server.commandMap.register(name, backupCommand)
         NMSReflection.disableCheckAutoSave()
-        server.scheduler.runTaskTimer(this, Runnable {
-            logger.info("Running backup task...")
-            this.backupWorlds(defaultCompressType, "autobackup")
-        }, 1 * 60 * 20, 20 * 60 * 20) // run every second
+
+        if (intervalBackupTaskEnabled) {
+            logger.info("Interval backup task is enabled.")
+            logger.info("First backup will start in ${intervalBackupTaskInitialDelay / (20 * 60)} minute. " +
+                    "Interval is ${intervalBackupTaskInterval / (20 * 60)} minutes.")
+
+            server.scheduler.runTaskTimer(this, Runnable {
+                logger.info("Running backup task...")
+                this.backupWorlds(defaultCompressType, "autobackup")
+            }, intervalBackupTaskInitialDelay, intervalBackupTaskInterval) // run every second
+        }
+
     }
 
     var backupCommand = object: BukkitCommand(
@@ -106,6 +114,9 @@ class Yabackup : JavaPlugin() {
         config.options().header("Yabackup Configuration\n")
         config.addDefault("backups_dir", "./backups")
         config.addDefault("compress.type", "zstd")
+        config.addDefault("interval_backup_task.enable", true)
+        config.addDefault("interval_backup_task.initial_delay_minutes", 1)
+        config.addDefault("interval_backup_task.interval_minutes", 20)
         saveConfig()
     }
 
@@ -122,6 +133,13 @@ class Yabackup : JavaPlugin() {
         }
     val defaultCompressType: CompressType
         get() = CompressType.valueOf(config.getString("compress.type")?.uppercase()!!)
+
+    val intervalBackupTaskEnabled: Boolean
+        get() = config.getBoolean("interval_backup_task.enable")
+    val intervalBackupTaskInitialDelay: Long
+        get() = config.getLong("interval_backup_task.initial_delay_minutes") * 60 * 20 // in ticks
+    val intervalBackupTaskInterval: Long
+        get() = config.getLong("interval_backup_task.interval_minutes") * 60 * 20 // in ticks
 }
 
 fun formatCurrentTime(): String {
