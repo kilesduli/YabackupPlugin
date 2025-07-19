@@ -14,7 +14,7 @@ import kotlin.io.path.notExists
 
 class Yabackup : JavaPlugin() {
     override fun onEnable() {
-        // register the command
+        setupConfig()
         server.commandMap.register(name, backupCommand)
         NMSReflection.disableCheckAutoSave()
         server.scheduler.runTaskTimer(this, Runnable {
@@ -101,12 +101,19 @@ class Yabackup : JavaPlugin() {
         }
     }
 
+    fun setupConfig() {
+        config.options().copyDefaults(true)
+        config.options().header("Yabackup Configuration\n")
+        config.addDefault("backups_dir", "./backups")
+        saveConfig()
+    }
+
 
     val sortedWorlds: List<World>
         get() = server.worlds.sortedBy { it.name }
     val backupDir: Path
         get() {
-            val path = Paths.get("./backups")
+            val path = Paths.get(config.getString("backups_dir")!!)
             if (path.notExists()) {
                 path.createDirectory()
             }
