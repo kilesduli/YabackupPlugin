@@ -39,8 +39,10 @@ class Yabackup : JavaPlugin() {
 
         if (intervalBackupTaskEnabled) {
             logger.info("Interval backup task is enabled.")
-            logger.info("First backup will start in ${intervalBackupTaskInitialDelay / (20 * 60)} minute. " +
-                    "Interval is ${intervalBackupTaskInterval / (20 * 60)} minutes.")
+            logger.info(
+                "First backup will start in ${intervalBackupTaskInitialDelay / (20 * 60)} minute. " +
+                "Interval is ${intervalBackupTaskInterval / (20 * 60)} minutes."
+            )
             logger.info("Skip backup if no players online: $intervalBackupTaskSkipIfNoPlayers")
 
             server.scheduler.runTaskTimer(this, Runnable {
@@ -65,7 +67,7 @@ class Yabackup : JavaPlugin() {
         }
     }
 
-    var backupCommand = object: BukkitCommand(
+    var backupCommand = object : BukkitCommand(
         "backup",
         "Backup worlds and compress(zstd, zip, gz) to archive",
         "/<command> <arg>",
@@ -88,17 +90,17 @@ class Yabackup : JavaPlugin() {
                 "console"
             }
 
-            backupWithPolicy(type,name)
+            backupWithPolicy(type, name)
             return true
         }
 
         override fun tabComplete(sender: CommandSender, alias: String, args: Array<out String>?): List<String> {
             if (args == null) return emptyList()
 
-            fun filterStartWith(size: Int): (String) -> Boolean = { it.startsWith(args[size-1].lowercase()) }
+            fun filterStartWith(size: Int): (String) -> Boolean = { it.startsWith(args[size - 1].lowercase()) }
 
             return when (val size = args.size) {
-                1 -> CompressType.toList().filter (filterStartWith(size))
+                1 -> CompressType.toList().filter(filterStartWith(size))
                 else -> emptyList()
             }
         }
@@ -147,7 +149,7 @@ class Yabackup : JavaPlugin() {
     }
 
     fun postBackupPolicy() {
-        val deletedFiles= mutableListOf<String>()
+        val deletedFiles = mutableListOf<String>()
         if (keepLastNBackups > 0) {
             val files = sortedBackupFiles
             val toDelete = if (files.size <= keepLastNBackups) {
@@ -203,7 +205,7 @@ class Yabackup : JavaPlugin() {
         get() = backupsDir
             .toFile()
             .listFiles()
-            .filter { it.name.matches(Regex("""^(\d{8}T\d{6}).*"""))}
+            .filter { it.name.matches(Regex("""^(\d{8}T\d{6}).*""")) }
             .sortedBy { it.name }
     val backupsDir: Path
         get() {

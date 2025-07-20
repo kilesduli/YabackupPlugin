@@ -83,6 +83,7 @@ enum class CompressType {
             ZSTD -> TarArchiveOutputStream(os).apply {
                 setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX)
             }
+
             ZIP -> ZipArchiveOutputStream(os).apply {
                 setMethod(ZipArchiveOutputStream.DEFLATED)
                 setLevel(zipLevel)
@@ -98,7 +99,7 @@ enum class CompressType {
     }
 }
 
-fun archiveThenCompress(dest: Path, paths: List<Path>, type: CompressType){
+fun archiveThenCompress(dest: Path, paths: List<Path>, type: CompressType) {
     val middleFile = Paths.get("/tmp/yabackup.tar")
     val destFile = when (type) {
         CompressType.ZSTD -> FileOutputStream(middleFile.toFile())
