@@ -185,8 +185,8 @@ class Yabackup : JavaPlugin() {
         config.options().copyDefaults(true)
         config.options().header("Yabackup Configuration\n")
         config.addDefault(Options.BACKUP_BACKUPS_DIR, "./backups")
-        config.addDefault(Options.BACKUP_BACKUPS_DIR_STORAGE_LIMIT, 1024) // in MB
         config.addDefault(Options.BACKUP_KEEP_LAST_N_BACKUPS, 10)
+        config.addDefault(Options.BACKUP_BACKUPS_DIR_STORAGE_LIMIT, 1024) // in MB
         config.addDefault(Options.COMPRESS_DEFAULT_TYPE, "zstd")
         config.addDefault(Options.COMPRESS_ZSTD_LEVEL, 10)
         config.addDefault(Options.COMPRESS_ZIP_LEVEL, 6)
