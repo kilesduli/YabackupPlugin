@@ -23,6 +23,7 @@ import org.bukkit.command.CommandSender
 import org.bukkit.command.defaults.BukkitCommand
 import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
+import java.io.File
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.LocalDateTime
@@ -43,7 +44,7 @@ class Yabackup : JavaPlugin() {
 
             server.scheduler.runTaskTimer(this, Runnable {
                 logger.info("Running backup task...")
-                this.backupWorlds(defaultCompressType, "autobackup")
+                this.backupWithPolicy(defaultCompressType, "autobackup")
             }, intervalBackupTaskInitialDelay, intervalBackupTaskInterval) // run every second
         }
 
@@ -75,7 +76,7 @@ class Yabackup : JavaPlugin() {
                 "console"
             }
 
-            backupWorlds(type,name)
+            backupWithPolicy(type,name)
             return true
         }
 
@@ -117,7 +118,7 @@ class Yabackup : JavaPlugin() {
         })
     }
 
-    fun backupWorlds(type: CompressType, extraFileInfo: String) = saveAllAndThen {
+    fun backupWithPolicy(type: CompressType, extraFileInfo: String) = saveAllAndThen {
         runCatching {
             logger.info("Creating backup archive...")
             val paths = sortedWorlds.map { it.worldFolder.toPath() }
@@ -125,8 +126,24 @@ class Yabackup : JavaPlugin() {
 
             archiveThenCompress(backupsDir.resolve(filename), paths, type)
             logger.info("Created backup archive: $filename")
-        }.onFailure { e ->
-            logger.severe("Failed to create backup: ${e.message}")
+        }.onFailure {
+            logger.severe("Failed to create backup: ${it.message}")
+        }
+        runCatching { postBackupPolicy() }.onFailure {
+            logger.severe("Failed to run after backup task: ${it.message}")
+        }
+    }
+
+    fun postBackupPolicy() {
+        if (keepLastNBackups > 0) {
+            val files = sortedBackupFiles
+            val toDelete = if (files.size <= keepLastNBackups) {
+                emptyList()
+            } else {
+                files.subList(0, files.size - keepLastNBackups)
+            }
+            toDelete.forEach { it.delete() }
+            logger.info("Deleted old backups: ${toDelete.joinToString(", ") { it.name }}")
         }
     }
 
@@ -134,6 +151,7 @@ class Yabackup : JavaPlugin() {
         config.options().copyDefaults(true)
         config.options().header("Yabackup Configuration\n")
         config.addDefault(Options.BACKUP_BACKUPS_DIR, "./backups")
+        config.addDefault(Options.BACKUP_KEEP_LAST_N_BACKUPS, 10)
         config.addDefault(Options.COMPRESS_TYPE, "zstd")
         config.addDefault(Options.INTERVAL_BACKUP_TASK_ENABLE, true)
         config.addDefault(Options.INTERVAL_BACKUP_TASK_INITIAL_DELAY_MINUTES, 1)
@@ -141,9 +159,14 @@ class Yabackup : JavaPlugin() {
         saveConfig()
     }
 
-
     val sortedWorlds: List<World>
         get() = server.worlds.sortedBy { it.name }
+    val sortedBackupFiles: List<File>
+        get() = backupsDir
+            .toFile()
+            .listFiles()
+            .filter { it.name.matches(Regex("""^(\d{8}T\d{6}).*"""))}
+            .sortedBy { it.name }
     val backupsDir: Path
         get() {
             val path = Paths.get(config.getString(Options.BACKUP_BACKUPS_DIR)!!)
@@ -161,10 +184,14 @@ class Yabackup : JavaPlugin() {
         get() = config.getLong(Options.INTERVAL_BACKUP_TASK_INITIAL_DELAY_MINUTES) * 60 * 20 // in ticks
     val intervalBackupTaskInterval: Long
         get() = config.getLong(Options.INTERVAL_BACKUP_TASK_INTERVAL_MINUTES) * 60 * 20 // in ticks
+
+    val keepLastNBackups: Int
+        get() = config.getInt(Options.BACKUP_KEEP_LAST_N_BACKUPS).coerceAtLeast(0)
 }
 
 object Options {
     const val BACKUP_BACKUPS_DIR = "backup.backups_dir"
+    const val BACKUP_KEEP_LAST_N_BACKUPS = "backup.keep_last_n_backups"
     const val COMPRESS_TYPE = "compress.type"
     const val INTERVAL_BACKUP_TASK_ENABLE = "interval_backup_task.enable"
     const val INTERVAL_BACKUP_TASK_INITIAL_DELAY_MINUTES = "interval_backup_task.initial_delay_minutes"
