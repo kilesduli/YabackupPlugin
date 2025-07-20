@@ -51,6 +51,14 @@ class Yabackup : JavaPlugin() {
         // Suppresses warnings triggered by plugin-initiated world saves via CraftServer.
         NMSReflection.disableCheckAutoSave()
 
+        runCatching {
+            CompressType.zstdLevel = config.getInt(Options.COMPRESS_ZSTD_LEVEL)
+            CompressType.zipLevel = config.getInt(Options.COMPRESS_ZIP_LEVEL)
+            logger.info("Zstd compression level: ${CompressType.zstdLevel}")
+            logger.info("Zip compression level: ${CompressType.zipLevel}")
+        }.onFailure {
+            logger.severe("Failed to set compression level: ${it.message}")
+        }
     }
 
     var backupCommand = object: BukkitCommand(
@@ -176,6 +184,8 @@ class Yabackup : JavaPlugin() {
         config.addDefault(Options.BACKUP_BACKUPS_DIR_STORAGE_LIMIT, 1024) // in MB
         config.addDefault(Options.BACKUP_KEEP_LAST_N_BACKUPS, 10)
         config.addDefault(Options.COMPRESS_DEFAULT_TYPE, "zstd")
+        config.addDefault(Options.COMPRESS_ZSTD_LEVEL, 10)
+        config.addDefault(Options.COMPRESS_ZIP_LEVEL, 6)
         config.addDefault(Options.INTERVAL_BACKUP_TASK_ENABLE, true)
         config.addDefault(Options.INTERVAL_BACKUP_TASK_INITIAL_DELAY_MINUTES, 1)
         config.addDefault(Options.INTERVAL_BACKUP_TASK_INTERVAL_MINUTES, 20)
@@ -219,6 +229,8 @@ object Options {
     const val BACKUP_KEEP_LAST_N_BACKUPS = "backup.keep_last_n_backups"
     const val BACKUP_BACKUPS_DIR_STORAGE_LIMIT = "backup.backups_dir_storage_limit"
     const val COMPRESS_DEFAULT_TYPE = "compress.default_type"
+    const val COMPRESS_ZSTD_LEVEL = "compress.zstd_level"
+    const val COMPRESS_ZIP_LEVEL = "compress.zip_level"
     const val INTERVAL_BACKUP_TASK_ENABLE = "interval_backup_task.enable"
     const val INTERVAL_BACKUP_TASK_INITIAL_DELAY_MINUTES = "interval_backup_task.initial_delay_minutes"
     const val INTERVAL_BACKUP_TASK_INTERVAL_MINUTES = "interval_backup_task.interval_minutes"

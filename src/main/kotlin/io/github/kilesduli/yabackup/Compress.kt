@@ -37,6 +37,7 @@ import kotlin.io.path.isRegularFile
 import kotlin.io.path.relativeTo
 import org.bukkit.Bukkit.*
 import java.io.BufferedOutputStream
+import java.util.zip.Deflater
 import kotlin.io.path.notExists
 
 enum class CompressType {
@@ -47,6 +48,21 @@ enum class CompressType {
         fun toList(): List<String> {
             return CompressType.entries.map { it.name.lowercase() }
         }
+
+        var zstdLevel: Int = 10 // This is a fallback value
+            set(value) {
+                if (value !in 1..22) {
+                    throw IllegalArgumentException("Zstd compression level must be between 1 and 22, inclusive.")
+                }
+                field = value
+            }
+        var zipLevel: Int = Deflater.DEFAULT_COMPRESSION // This is a fallback value
+            set(value) {
+                if (value !in Deflater.BEST_SPEED..Deflater.BEST_COMPRESSION) {
+                    throw IllegalArgumentException("Zip compression level must be between ${Deflater.BEST_SPEED} and ${Deflater.BEST_COMPRESSION}, inclusive.")
+                }
+                field = value
+            }
     }
 
     fun suffix(): String {
@@ -70,13 +86,14 @@ enum class CompressType {
             }
             ZIP -> ZipArchiveOutputStream(os).apply {
                 setMethod(ZipArchiveOutputStream.DEFLATED)
+                setLevel(zipLevel)
             }
         }
     }
 
     fun createCompressorInputStream(os: BufferedOutputStream): CompressorOutputStream<*> {
         return when (this) {
-            ZSTD -> ZstdCompressorOutputStream(os, 10)
+            ZSTD -> ZstdCompressorOutputStream(os, zstdLevel)
             ZIP -> throw Exception("This type does not require secondary compression: $this")
         }
     }
