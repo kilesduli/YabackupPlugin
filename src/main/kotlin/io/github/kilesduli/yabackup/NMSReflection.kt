@@ -72,10 +72,10 @@ object NMSReflection {
                 3 -> saveWorldProxy.invoke(serverLevel, null, true, false)
 
                 // According to the Minecraft 1.12 source code,
-                // calling '/save-all flush' will first invoke `saveWorld`, then `flushSave`.
-                // This behavior only works correctly in versions 1.10 through 1.12.
-                // In versions prior to 1.10, it may cause the server to endlessly save chunks until it hangs,
-                // though this issue does not occur on the official (vanilla) server.
+                // running '/save-all flush' invokes `saveWorld`, followed by `flushSave`.
+                // This behavior behaves correctly only in versions 1.10 through 1.13.
+                // In versions prior to 1.10, it may cause the server to hang due to infinite chunk saving;
+                // however, this issue has only been observed on modified servers and does not occur on the official (vanilla) server.
                 2 -> {
                     // saveWorld :: save(boolean flush, @Nullable IProgressUpdate iprogressupdate)
                     saveWorldProxy.invoke(serverLevel, true, null)
