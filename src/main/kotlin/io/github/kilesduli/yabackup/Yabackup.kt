@@ -24,6 +24,7 @@ import org.bukkit.command.defaults.BukkitCommand
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
+import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
@@ -121,6 +122,14 @@ class Yabackup : JavaPlugin() {
                 backupWithPolicy(defaultCompressType, "${event.player.name}-quit")
             }
         }
+
+        @EventHandler
+        fun onPlayerJoin(event: PlayerJoinEvent) {
+            if (backupOnPlayerJoin) {
+                logger.info("Player ${event.player.name} joined, running backup task...")
+                backupWithPolicy(defaultCompressType, "${event.player.name}-join")
+            }
+        }
     }
 
     fun saveAllAndThen(task: Runnable) {
@@ -206,6 +215,7 @@ class Yabackup : JavaPlugin() {
         config.addDefault(Options.BACKUP_BACKUPS_DIR, "./backups")
         config.addDefault(Options.BACKUP_KEEP_LAST_N_BACKUPS, 10)
         config.addDefault(Options.BACKUP_BACKUPS_DIR_STORAGE_LIMIT, 1024) // in MB
+        config.addDefault(Options.BACKUP_ON_PLAYER_JOIN, false)
         config.addDefault(Options.BACKUP_ON_PLAYER_QUIT, true)
         config.addDefault(Options.COMPRESS_DEFAULT_TYPE, "zstd")
         config.addDefault(Options.COMPRESS_ZSTD_LEVEL, 10)
@@ -249,6 +259,8 @@ class Yabackup : JavaPlugin() {
         get() = config.getInt(Options.BACKUP_KEEP_LAST_N_BACKUPS).coerceAtLeast(0)
     val backupsDirStorageLimit: Long
         get() = config.getLong(Options.BACKUP_BACKUPS_DIR_STORAGE_LIMIT).coerceAtLeast(0) * 1024 * 1024 // in bytes
+    val backupOnPlayerJoin: Boolean
+        get() = config.getBoolean(Options.BACKUP_ON_PLAYER_JOIN)
     val backupOnPlayerQuit: Boolean
         get() = config.getBoolean(Options.BACKUP_ON_PLAYER_QUIT)
 }
@@ -257,6 +269,7 @@ object Options {
     const val BACKUP_BACKUPS_DIR = "backup.backups_dir"
     const val BACKUP_KEEP_LAST_N_BACKUPS = "backup.keep_last_n_backups"
     const val BACKUP_BACKUPS_DIR_STORAGE_LIMIT = "backup.backups_dir_storage_limit"
+    const val BACKUP_ON_PLAYER_JOIN = "backup.on_player_join"
     const val BACKUP_ON_PLAYER_QUIT = "backup.on_player_quit"
     const val COMPRESS_DEFAULT_TYPE = "compress.default_type"
     const val COMPRESS_ZSTD_LEVEL = "compress.zstd_level"
