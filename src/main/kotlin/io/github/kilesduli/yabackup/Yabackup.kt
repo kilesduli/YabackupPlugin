@@ -32,7 +32,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import kotlin.io.path.createDirectory
+import kotlin.io.path.createDirectories
 import kotlin.io.path.notExists
 
 class Yabackup : JavaPlugin() {
@@ -239,7 +239,7 @@ class Yabackup : JavaPlugin() {
         get() {
             val path = Paths.get(config.getString(Options.BACKUP_BACKUPS_DIR)!!)
             if (path.notExists()) {
-                path.createDirectory()
+                path.createDirectories()
             }
             return path
         }
