@@ -41,8 +41,12 @@ class Yabackup : JavaPlugin() {
             logger.info("Interval backup task is enabled.")
             logger.info("First backup will start in ${intervalBackupTaskInitialDelay / (20 * 60)} minute. " +
                     "Interval is ${intervalBackupTaskInterval / (20 * 60)} minutes.")
+            logger.info("Skip backup if no players online: $intervalBackupTaskSkipIfNoPlayers")
 
             server.scheduler.runTaskTimer(this, Runnable {
+                if (intervalBackupTaskSkipIfNoPlayers && server.onlinePlayers.isEmpty()) {
+                    return@Runnable
+                }
                 logger.info("Running backup task...")
                 this.backupWithPolicy(defaultCompressType, "autobackup")
             }, intervalBackupTaskInitialDelay, intervalBackupTaskInterval) // run every second
@@ -189,6 +193,7 @@ class Yabackup : JavaPlugin() {
         config.addDefault(Options.INTERVAL_BACKUP_TASK_ENABLE, true)
         config.addDefault(Options.INTERVAL_BACKUP_TASK_INITIAL_DELAY_MINUTES, 1)
         config.addDefault(Options.INTERVAL_BACKUP_TASK_INTERVAL_MINUTES, 20)
+        config.addDefault(Options.INTERVAL_BACKUP_TASK_SKIP_IF_NO_PLAYERS, true)
         saveConfig()
     }
 
@@ -217,6 +222,8 @@ class Yabackup : JavaPlugin() {
         get() = config.getLong(Options.INTERVAL_BACKUP_TASK_INITIAL_DELAY_MINUTES) * 60 * 20 // in ticks
     val intervalBackupTaskInterval: Long
         get() = config.getLong(Options.INTERVAL_BACKUP_TASK_INTERVAL_MINUTES) * 60 * 20 // in ticks
+    val intervalBackupTaskSkipIfNoPlayers: Boolean
+        get() = config.getBoolean(Options.INTERVAL_BACKUP_TASK_SKIP_IF_NO_PLAYERS)
 
     val keepLastNBackups: Int
         get() = config.getInt(Options.BACKUP_KEEP_LAST_N_BACKUPS).coerceAtLeast(0)
@@ -234,6 +241,7 @@ object Options {
     const val INTERVAL_BACKUP_TASK_ENABLE = "interval_backup_task.enable"
     const val INTERVAL_BACKUP_TASK_INITIAL_DELAY_MINUTES = "interval_backup_task.initial_delay_minutes"
     const val INTERVAL_BACKUP_TASK_INTERVAL_MINUTES = "interval_backup_task.interval_minutes"
+    const val INTERVAL_BACKUP_TASK_SKIP_IF_NO_PLAYERS = "interval_backup_task.skip_if_no_players"
 }
 
 fun formatCurrentTime(): String {
