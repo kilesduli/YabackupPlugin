@@ -65,12 +65,11 @@ enum class CompressType {
             }
     }
 
-    fun suffix(): String {
-        return when (this) {
+    val suffix: String
+        get() = when (this) {
             ZSTD -> ".tar.zst"
             ZIP -> ".zip"
         }
-    }
 
     fun newArchiveEntry(path: Path, name: String): ArchiveEntry {
         return when (this) {
