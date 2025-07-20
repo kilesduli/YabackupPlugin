@@ -91,7 +91,7 @@ class Yabackup : JavaPlugin() {
         }
     }
 
-    fun withNoAutoSaveThenSaveAllAsync(task: Runnable) {
+    fun saveAllAndThen(task: Runnable) {
         val worlds = sortedWorlds
         val worldFlags = worlds.map { it.isAutoSave }
 
@@ -117,7 +117,7 @@ class Yabackup : JavaPlugin() {
         })
     }
 
-    fun backupWorlds(type: CompressType, extraFileInfo: String) = withNoAutoSaveThenSaveAllAsync {
+    fun backupWorlds(type: CompressType, extraFileInfo: String) = saveAllAndThen {
         runCatching {
             logger.info("Creating backup archive...")
             val paths = sortedWorlds.map { it.worldFolder.toPath() }
