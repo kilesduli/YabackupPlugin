@@ -53,7 +53,7 @@ class Yabackup : JavaPlugin() {
                 if (intervalBackupTaskSkipIfNoPlayers && server.onlinePlayers.isEmpty()) {
                     return@Runnable
                 }
-                logger.info("Running backup task...")
+                logger.info("Running interval backup task...")
                 this.backupWithPolicy(defaultCompressType, "autobackup")
             }, intervalBackupTaskInitialDelay, intervalBackupTaskInterval) // run every second
         }
