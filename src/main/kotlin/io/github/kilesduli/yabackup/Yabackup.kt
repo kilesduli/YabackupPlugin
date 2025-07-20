@@ -175,7 +175,7 @@ class Yabackup : JavaPlugin() {
         config.addDefault(Options.BACKUP_BACKUPS_DIR, "./backups")
         config.addDefault(Options.BACKUP_BACKUPS_DIR_STORAGE_LIMIT, 1024) // in MB
         config.addDefault(Options.BACKUP_KEEP_LAST_N_BACKUPS, 10)
-        config.addDefault(Options.COMPRESS_TYPE, "zstd")
+        config.addDefault(Options.COMPRESS_DEFAULT_TYPE, "zstd")
         config.addDefault(Options.INTERVAL_BACKUP_TASK_ENABLE, true)
         config.addDefault(Options.INTERVAL_BACKUP_TASK_INITIAL_DELAY_MINUTES, 1)
         config.addDefault(Options.INTERVAL_BACKUP_TASK_INTERVAL_MINUTES, 20)
@@ -199,7 +199,7 @@ class Yabackup : JavaPlugin() {
             return path
         }
     val defaultCompressType: CompressType
-        get() = CompressType.valueOf(config.getString(Options.COMPRESS_TYPE)?.uppercase()!!)
+        get() = CompressType.valueOf(config.getString(Options.COMPRESS_DEFAULT_TYPE)?.uppercase()!!)
 
     val intervalBackupTaskEnabled: Boolean
         get() = config.getBoolean(Options.INTERVAL_BACKUP_TASK_ENABLE)
@@ -218,7 +218,7 @@ object Options {
     const val BACKUP_BACKUPS_DIR = "backup.backups_dir"
     const val BACKUP_KEEP_LAST_N_BACKUPS = "backup.keep_last_n_backups"
     const val BACKUP_BACKUPS_DIR_STORAGE_LIMIT = "backup.backups_dir_storage_limit"
-    const val COMPRESS_TYPE = "compress.type"
+    const val COMPRESS_DEFAULT_TYPE = "compress.default_type"
     const val INTERVAL_BACKUP_TASK_ENABLE = "interval_backup_task.enable"
     const val INTERVAL_BACKUP_TASK_INITIAL_DELAY_MINUTES = "interval_backup_task.initial_delay_minutes"
     const val INTERVAL_BACKUP_TASK_INTERVAL_MINUTES = "interval_backup_task.interval_minutes"
