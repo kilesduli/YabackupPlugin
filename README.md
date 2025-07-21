@@ -2,6 +2,9 @@
 
 Yet another mc saves data backup plugin, but support compress to zstd
 
+Supported Minecraft version: 1.10 - 1.21+
+Java version required: 8
+
 ## Build from source
 
 ``` sh
