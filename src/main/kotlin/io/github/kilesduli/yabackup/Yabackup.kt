@@ -26,6 +26,8 @@ import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.player.PlayerJoinEvent
 import org.bukkit.event.player.PlayerQuitEvent
+import org.bukkit.permissions.Permission
+import org.bukkit.permissions.PermissionDefault
 import org.bukkit.plugin.java.JavaPlugin
 import java.io.File
 import java.nio.file.Path
@@ -37,6 +39,8 @@ import kotlin.io.path.notExists
 
 class Yabackup : JavaPlugin() {
     override fun onEnable() {
+        server.pluginManager.addPermission(backupPermission)
+        backupCommand.permission = backupPermission.children.keys.firstOrNull { it == "yabackup.backup" }!!
         server.commandMap.register(name, backupCommand)
         server.pluginManager.registerEvents(backupEvent, this)
 
@@ -72,6 +76,13 @@ class Yabackup : JavaPlugin() {
         }
     }
 
+    val backupPermission = Permission(
+        "yabackup",
+        "Allows player to run backup command",
+        PermissionDefault.OP,
+        mapOf("yabackup.backup" to true)
+    )
+
     var backupCommand = object : BukkitCommand(
         "backup",
         "Backup worlds and compress(zstd, zip, gz) to archive",
@@ -95,7 +106,10 @@ class Yabackup : JavaPlugin() {
                 "console"
             }
 
-            backupWithPolicy(type, name)
+            backupWithPolicy(type, name) { filename ->
+                sender.sendMessage("§a[Yabackup] Backup created: $filename")
+            }
+
             return true
         }
 
@@ -158,7 +172,7 @@ class Yabackup : JavaPlugin() {
         })
     }
 
-    fun backupWithPolicy(type: CompressType, extraFileInfo: String) = saveAllAndThen {
+    fun backupWithPolicy(type: CompressType, extraFileInfo: String, afterBackup: ((String) -> Unit)? = null) = saveAllAndThen {
         runCatching {
             logger.info("Creating backup archive...")
             val paths = sortedWorlds.map { it.worldFolder.toPath() }
@@ -166,6 +180,7 @@ class Yabackup : JavaPlugin() {
 
             archiveThenCompress(backupsDir.resolve(filename), paths, type)
             logger.info("Created backup archive: $filename")
+            afterBackup?.invoke(filename)
         }.onFailure {
             logger.severe("Failed to create backup: ${it.message}")
         }
