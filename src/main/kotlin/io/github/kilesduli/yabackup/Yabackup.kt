@@ -107,7 +107,9 @@ class Yabackup : JavaPlugin() {
             }
 
             backupWithPolicy(type, name) { filename ->
-                sender.sendMessage("§a[Yabackup] Backup created: $filename")
+                if (sender is Player) {
+                    sender.sendMessage("§a[Yabackup] Backup created: $filename")
+                }
             }
 
             return true
