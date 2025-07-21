@@ -118,6 +118,5 @@ fun archiveThenCompress(dest: Path, paths: List<Path>, type: CompressType) {
                     out.closeArchiveEntry()
                 }
             }
-            out.finish()
         }
 }
