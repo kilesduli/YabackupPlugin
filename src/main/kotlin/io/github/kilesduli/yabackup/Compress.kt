@@ -31,14 +31,11 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
-import kotlin.io.path.deleteIfExists
 import kotlin.io.path.isRegularFile
 import kotlin.io.path.relativeTo
-import org.bukkit.Bukkit.*
 import java.io.BufferedOutputStream
+import java.io.OutputStream
 import java.util.zip.Deflater
-import kotlin.io.path.notExists
 
 enum class CompressType {
     ZSTD,
@@ -78,7 +75,7 @@ enum class CompressType {
         }
     }
 
-    fun createArchiveOutputStream(os: FileOutputStream): ArchiveOutputStream<out ArchiveEntry> {
+    fun createArchiveOutputStream(os: OutputStream): ArchiveOutputStream<out ArchiveEntry> {
         return when (this) {
             ZSTD -> TarArchiveOutputStream(os).apply {
                 setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX)
@@ -91,22 +88,23 @@ enum class CompressType {
         }
     }
 
-    fun createCompressorOutputStream(os: BufferedOutputStream): CompressorOutputStream<*> {
+    fun createCompressorOutputStream(os: OutputStream): CompressorOutputStream<*> {
         return when (this) {
             ZSTD -> ZstdCompressorOutputStream(os, zstdLevel)
             ZIP -> throw Exception("This type does not require secondary compression: $this")
         }
     }
+
+    fun convertFilePathToOutputStream(path: Path): BufferedOutputStream {
+        return when (this) {
+            CompressType.ZSTD -> this.createCompressorOutputStream(FileOutputStream(path.toFile())).buffered()
+            CompressType.ZIP -> FileOutputStream(path.toFile()).buffered()
+        }
+    }
 }
 
 fun archiveThenCompress(dest: Path, paths: List<Path>, type: CompressType) {
-    val middleFile = Paths.get("/tmp/yabackup.tar")
-    val destFile = when (type) {
-        CompressType.ZSTD -> FileOutputStream(middleFile.toFile())
-        CompressType.ZIP -> FileOutputStream(dest.toFile())
-    }
-
-    type.createArchiveOutputStream(destFile)
+    type.createArchiveOutputStream(type.convertFilePathToOutputStream(dest))
         .use { out ->
             paths.forEach { path ->
                 Files.walk(path).forEach {
@@ -122,22 +120,4 @@ fun archiveThenCompress(dest: Path, paths: List<Path>, type: CompressType) {
             }
             out.finish()
         }
-
-    compress(dest, middleFile, type)
-    middleFile.deleteIfExists()
-}
-
-private fun compress(dest: Path, middleFile: Path, type: CompressType) {
-    runCatching {
-        if (middleFile.notExists()) return
-        val inputstream = FileInputStream(middleFile.toFile())
-        val outputstream = FileOutputStream(dest.toFile()).buffered()
-        type.createCompressorOutputStream(outputstream).use {
-            IOUtils.copy(inputstream, it)
-            it.close()
-            inputstream.close()
-        }
-    }.onFailure { e ->
-        getServer().logger.severe(e.message)
-    }
 }
