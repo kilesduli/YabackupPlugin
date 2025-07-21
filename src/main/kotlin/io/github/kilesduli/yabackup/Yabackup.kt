@@ -85,8 +85,8 @@ class Yabackup : JavaPlugin() {
 
     var backupCommand = object : BukkitCommand(
         "backup",
-        "Backup worlds and compress(zstd, zip, gz) to archive",
-        "/<command> <arg>",
+        "Backup worlds and compress(zstd, zip) to archive",
+        "/<command> [zstd|zip]",
         listOf()
     ) {
         override fun execute(
