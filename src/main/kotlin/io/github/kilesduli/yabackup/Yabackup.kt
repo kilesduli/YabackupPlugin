@@ -222,7 +222,14 @@ class Yabackup : JavaPlugin() {
 
         if (deletedFiles.isNotEmpty()) {
             logger.info("Deleted old backups: ${deletedFiles.joinToString(", ")}")
-            return
+        }
+
+        val currentSize = sortedBackupFiles.sumOf { it.length() } / 1024 / 1024
+        if (backupsDirStorageLimit > 0) {
+            val backupsDirStorageLimitMB = backupsDirStorageLimit / 1024 / 1024
+            logger.info("Currently using ${currentSize}MB out of ${backupsDirStorageLimitMB}MB.")
+        } else {
+            logger.info("Currently using ${currentSize}MB of backups directory, storage limit is disabled.")
         }
     }
 
