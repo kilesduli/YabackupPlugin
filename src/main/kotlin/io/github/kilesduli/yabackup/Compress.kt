@@ -91,7 +91,7 @@ enum class CompressType {
         }
     }
 
-    fun createCompressorInputStream(os: BufferedOutputStream): CompressorOutputStream<*> {
+    fun createCompressorOutputStream(os: BufferedOutputStream): CompressorOutputStream<*> {
         return when (this) {
             ZSTD -> ZstdCompressorOutputStream(os, zstdLevel)
             ZIP -> throw Exception("This type does not require secondary compression: $this")
@@ -132,7 +132,7 @@ private fun compress(dest: Path, middleFile: Path, type: CompressType) {
         if (middleFile.notExists()) return
         val inputstream = FileInputStream(middleFile.toFile())
         val outputstream = FileOutputStream(dest.toFile()).buffered()
-        type.createCompressorInputStream(outputstream).use {
+        type.createCompressorOutputStream(outputstream).use {
             IOUtils.copy(inputstream, it)
             it.close()
             inputstream.close()
